@@ -1,5 +1,6 @@
 ﻿using IdentityService.Models.Requests;
 using IdentityService.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityService.Controllers
@@ -19,6 +20,7 @@ namespace IdentityService.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             var result = await _authService.RegisterAsync(request);
@@ -35,6 +37,7 @@ namespace IdentityService.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var result = await _authService.LoginAsync(request);
@@ -51,6 +54,7 @@ namespace IdentityService.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost("externallogin")]
+        [AllowAnonymous]
         public async Task<IActionResult> ExternalLogin([FromBody] ExternalLoginRequest request)
         {
             var result = await _authService.ExternalLoginAsync(request);

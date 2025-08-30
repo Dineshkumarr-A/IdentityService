@@ -1,5 +1,7 @@
+﻿using IdentityService.Data;
 using IdentityService.Extensions;
 using IdentityService.Filters;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
