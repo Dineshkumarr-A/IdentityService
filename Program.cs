@@ -5,8 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDatabaseProvider(builder.Configuration);
 builder.Services.AddIdentityServices();
-
-// Add services to the container.
+builder.Services.AddApplicationServices();
+builder.Services.AddJwtAuthService(builder.Configuration);
 
 builder.Services.AddControllers(options =>
 {
