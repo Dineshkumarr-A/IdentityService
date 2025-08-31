@@ -30,8 +30,5 @@ steps:
     azureSubscription: 'Azure subscription 1(2c87b94c-e748-4605-a6fc-dd3ba336fc50)'
     appType: 'webAppLinux'
     WebAppName: 'IdentityService'
-    deployToSlotOrASE: true
-    ResourceGroupName: 'Azure-poc'
-    SlotName: 'production'
     packageForLinux: '$(Build.ArtifactStagingDirectory)/publish'
     DeploymentTypeLinux: 'oneDeploy'
