@@ -6,29 +6,65 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
+  publishDir: '$(Build.ArtifactStagingDirectory)/publish'
+  swaggerJson: '$(Build.ArtifactStagingDirectory)/publish/swagger.json'
+  apiVersion: 'v1'
+  apimResourceGroup: 'Azure-poc'
+  apimServiceName: 'IdentityServiceapi'
+  apimApiId: 'IdentityService'
+  apimApiPath: 'identityservice'
+  apimAppServiceUrl: 'https://identityservice-gudxdgdna2fnbqa9.centralindia-01.azurewebsites.net'
 
 steps:
-# Build & publish in one step
+# Build & publish the web app
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet publish'
+  displayName: 'dotnet publish IdentityService'
   inputs:
     command: 'publish'
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish'
+    projects: 'src/IdentityService/IdentityService.csproj'
+    arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
 
-# Publish artifact (optional for releases or downloads)
+# Install Swashbuckle CLI
+- script: dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 5.6.3
+  displayName: 'Install Swashbuckle CLI'
+
+# Generate OpenAPI spec from published DLL
+- script: swagger tofile --output "$(swaggerJson)" "$(publishDir)/IdentityService.dll" "$(apiVersion)"
+  displayName: 'Generate Swagger spec'
+
+# Publish artifact (optional)
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'
+    PathtoPublish: '$(publishDir)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-# Deploy directly from folder (no zip required)
+# Deploy to Azure Web App (Linux)
 - task: AzureRmWebAppDeployment@5
+  displayName: 'Deploy to Azure WebApp'
   inputs:
     ConnectionType: 'AzureRM'
     azureSubscription: 'Azure subscription 1(2c87b94c-e748-4605-a6fc-dd3ba336fc50)'
-    appType: 'webAppLinux'
+    appType: 'webAppLinux'   # change to 'webApp' if Windows App Service
     WebAppName: 'IdentityService'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/publish'
+    packageForLinux: '$(publishDir)'
     DeploymentTypeLinux: 'oneDeploy'
+
+# Import or update API in Azure API Management
+- task: AzureCLI@2
+  displayName: 'Import API into APIM'
+  inputs:
+    azureSubscription: 'Azure subscription 1(2c87b94c-e748-4605-a6fc-dd3ba336fc50)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Importing API into APIM..."
+      az apim api import \
+        --resource-group $(apimResourceGroup) \
+        --service-name $(apimServiceName) \
+        --api-id $(apimApiId) \
+        --path $(apimApiPath) \
+        --specification-path $(swaggerJson) \
+        --specification-format OpenApi \
+        --service-url $(apimAppServiceUrl) \
+        --subscription-required false
