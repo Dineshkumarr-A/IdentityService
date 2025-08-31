@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  name: mylinuxagent
+  name: mylinuxagent   # your self-hosted agent
 
 variables:
   buildConfiguration: 'Release'
@@ -21,11 +21,11 @@ steps:
   displayName: 'dotnet publish IdentityService'
   inputs:
     command: 'publish'
-    projects: 'src/IdentityService/IdentityService.csproj'
+    projects: 'src/IdentityService/IdentityService.csproj'   # adjust path to your .csproj
     arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
 
-# Install Swashbuckle CLI
-- script: dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 5.6.3
+# Install Swashbuckle CLI (version compatible with .NET 8)
+- script: dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 6.5.0
   displayName: 'Install Swashbuckle CLI'
 
 # Generate OpenAPI spec from published DLL
@@ -34,6 +34,7 @@ steps:
 
 # Publish artifact (optional)
 - task: PublishBuildArtifacts@1
+  displayName: 'Publish build artifacts'
   inputs:
     PathtoPublish: '$(publishDir)'
     ArtifactName: 'drop'
@@ -45,7 +46,7 @@ steps:
   inputs:
     ConnectionType: 'AzureRM'
     azureSubscription: 'Azure subscription 1(2c87b94c-e748-4605-a6fc-dd3ba336fc50)'
-    appType: 'webAppLinux'   # change to 'webApp' if Windows App Service
+    appType: 'webAppLinux'   # change to 'webApp' if your App Service runs on Windows
     WebAppName: 'IdentityService'
     packageForLinux: '$(publishDir)'
     DeploymentTypeLinux: 'oneDeploy'
