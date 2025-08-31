@@ -24,10 +24,6 @@ steps:
     projects: 'src/IdentityService/IdentityService.csproj'   # adjust path to your .csproj
     arguments: '--configuration $(buildConfiguration) --output $(publishDir)'
 
-# Install Swashbuckle CLI (version compatible with .NET 8)
-- script: dotnet tool install --global Swashbuckle.AspNetCore.Cli --version 6.5.0
-  displayName: 'Install Swashbuckle CLI'
-
 # Generate OpenAPI spec from published DLL
 - script: swagger tofile --output "$(swaggerJson)" "$(publishDir)/IdentityService.dll" "$(apiVersion)"
   displayName: 'Generate Swagger spec'
