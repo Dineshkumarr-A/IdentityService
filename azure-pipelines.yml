@@ -6,34 +6,24 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  publishDir: '$(Build.ArtifactStagingDirectory)/publish'
 
 steps:
-# Build
-- script: dotnet build --configuration $(buildConfiguration)
-  displayName: 'dotnet build $(buildConfiguration)'
-
-# Publish the app (creates output suitable for deployment)
-- script: dotnet publish --configuration $(buildConfiguration) -o $(publishDir)
-  displayName: 'dotnet publish $(buildConfiguration)'
-
-# Zip the published output (so deployment task can pick it up)
-- task: ArchiveFiles@2
+# Build & publish in one step
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish'
   inputs:
-    rootFolderOrFile: '$(publishDir)'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    replaceExistingArchive: true
+    command: 'publish'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish'
 
-# Publish artifact (optional, so you can use it in release pipeline or download later)
+# Publish artifact (optional for releases or downloads)
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-# Deploy to Azure Web App (Linux)
+# Deploy directly from folder (no zip required)
 - task: AzureRmWebAppDeployment@5
   inputs:
     ConnectionType: 'AzureRM'
@@ -43,5 +33,5 @@ steps:
     deployToSlotOrASE: true
     ResourceGroupName: 'Azure-poc'
     SlotName: 'production'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/*.zip'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/publish'
     DeploymentTypeLinux: 'oneDeploy'
