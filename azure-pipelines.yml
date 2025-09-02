@@ -14,7 +14,7 @@ steps:
   inputs:
     command: 'publish'
     projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish'
+    arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --self-contained false --output $(Build.ArtifactStagingDirectory)/publish'
 
 # Archive published output into a zip file
 - task: ArchiveFiles@2
