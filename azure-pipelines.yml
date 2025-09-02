@@ -16,19 +16,31 @@ steps:
     projects: '**/*.csproj'
     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish'
 
+# Archive published output into a zip file
+- task: ArchiveFiles@2
+  displayName: 'Archive published files'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+
 # Publish artifact (optional for releases or downloads)
 - task: PublishBuildArtifacts@1
+  displayName: 'Publish build artifacts'
   inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-# Deploy directly from folder (no zip required)
+# Deploy via Zip Deploy
 - task: AzureRmWebAppDeployment@5
+  displayName: 'Deploy to Azure WebApp (Zip Deploy)'
   inputs:
     ConnectionType: 'AzureRM'
     azureSubscription: 'Azure subscription 1(2c87b94c-e748-4605-a6fc-dd3ba336fc50)'
-    appType: 'webAppLinux'
+    appType: 'webAppLinux'   # change to 'webApp' if Windows
     WebAppName: 'IdentityService'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/publish'
-    DeploymentTypeLinux: 'oneDeploy'
+    packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    DeploymentTypeLinux: 'zipDeploy'
